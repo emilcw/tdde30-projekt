@@ -1,0 +1,148 @@
+
+1:"I WaveManager har ni väldigt mycket kod för att skapa listor med olika antal BASICMOB.  Detta bör ni ändra på så att ni använder en loop -- createMobList(int antal)."
+Komplettering: Vi skapade functionen createMobList som fungerar enligt ovanstående specification. 
+
+2:"I validDirection() räknar ni med flyttal och jämför exakt likhet.  Här är det stor risk för avrundningsfel i t.ex. jämförelsen x + speed != oldX:"
+K: validDirection() (i AbstractMob) är nu rejält omskriven och använder nu den nyskapade funktionen isOppositeDirection som fyller samma syfte (att hindra moben från att vända) men utan flytal.
+
+3:"Buttons: Typnamn i Java ska nästan alltid, med *väldigt* få undantag, skrivas i singular.  Att följa sådana namngivningsregler är viktigt för att andra programmerare ska kunna läsa koden enklare 
+och för att alla ska få rätt bild av vad som menas (#KLASSNAMN)."
+K: Buttons heter nu Button
+
+4:"Det kan vara frestande att namnge en del variabler eller fält efter den typ de har.  Oftast är det bättre att undvika detta och i stället fokusera på variabelns betydelse.  Till exempel bör en 
+boolean-variabel inte ha 'boolean' i sitt namn, och en lista över namn bör helst kallas 'names' snarare än 'nameList'.  På det sättet fokuserar man på innehållet snarare än lagringstyp.  Namn som 
+innehåller typ i detta projekt: abstractMobList, abstractTowerList, mobTypeList, waveList, bulletlist"
+K: de heter nu abstractMobs, abstractTower och mobTypes (i Controller), waves (i WaveManager) och bullets (AbstractTowers)
+
+5:"Projektet använder klassnamn (Map) som även används för välkända klasser i Javas standardbibliotek.  Om man hittar på andra namn för dessa klasser blir det lättare för andra programmerare att 
+läsa koden, med mindre risk för missförstånd."
+K: MapMaker heter TowerDefenceMapMaker, är detta fortfarande förvirrande för att den använder Map i namnet utan att ha något att göra med den klassen?
+
+6:"Rekommenderar Point2D.distance() för avståndsberäkningar mellan punkter."
+K: withinDistance (i Board) använder nu Point2D.
+
+7:"Det bör gå att slå ihop funktionerna nedan till en så att ni har en generell som anropas med olika parametrar. Varför läggs middle till och dras bort? Då kan ni utelämna den helt.
+
+I middleDistance är ourX nästan samma som targeX, bara avrundningen skiljer. Är detta medvetet?"
+K: WithinDistance (i Board) är nu våran generella function, middle finns där så att vi är säkra på att det är samma block, annars kan moben som är placerad på (2.99999,4) räknas som att den är på block (2,4) för functionen men vi ser den och vill
+behandla den som att den är på 3 ty där är dens mittpunkt.
+Ja det är medvetet, vi vill jämföra hur nära mobens mittpunkt är blocket den är placerad på.
+
+8:"paintComponent:
+	for (int i = 0; i < cont.getMobListLen(); i++) {
+	    AbstractMob basicMob = cont.getMob(i);
+	    double doubleX = basicMob.getX() * SQUARE_MULTIPLIER;
+	    double doubleY = basicMob.getY() * SQUARE_MULTIPLIER;
+	    int intX = (int) doubleX;
+	    int intY = (int) doubleY;
+	    g2d.setColor(RED);
+	    g2d.drawRect(intX, intY, SQUARE_SIDE, SQUARE_SIDE);
+	    g2d.fillRect(intX, intY, SQUARE_SIDE - 1, SQUARE_SIDE - 1);
+	}
+Här kan ni göra en funktion (drawSquareCreature) som tar in double-coordinater och gör resten. Då kan denna anropas även för torn."
+K: I TowerDefenceComponent har vi nu functionen drawSquareCreature som anropas för mobs och torn (blir mindre omptimalt för torn då cirklarna som ska ritas runt tornen behövde en del av fälten vi la in i den nya funktionen).
+
+9:"Varför stoppar ni in färgerna varje gång ni vill veta en färg? Ni kan skapa mappen en gång."
+K: Vi låter nu färgmappen skapas när TowerDefenceComponent skapas utan att återskapa den varje gång i getColor
+
+10:"Det hade nog gått att effektivisera följande kod.
+    public void moveMob(Board b){
+
+        if (b.middleDistance(x,y)){
+
+            if (this.validDirection(b, mydirection)) {
+                oldX = x;
+                oldY = y;
+                moveMobDir(mydirection);
+            } else if (this.validDirection(b, RIGHT)) {
+                oldX = x;
+                oldY = y;
+                moveMobDir(RIGHT);
+                mydirection = RIGHT;
+            } else if (this.validDirection(b, LEFT)) {
+                oldX = x;
+                oldY = y;
+                moveMobDir(LEFT);
+                mydirection = LEFT;
+            } else if (this.validDirection(b, UP)) {
+                oldX = x;
+                oldY = y;
+                moveMobDir(UP);
+                mydirection = UP;
+            } else if (this.validDirection(b, DOWN)) {
+                oldX = x;
+                oldY = y;
+                moveMobDir(DOWN);
+                mydirection = DOWN;
+            } else{
+                mydirection = NONE;
+            }
+        } else {
+            oldX = x;
+            oldY = y;
+            moveMobDir(mydirection);
+        }
+    }
+Många grenar gör samma fast med olika direction.
+
+if (handleDirection(DOWN)) return;
+osv."
+K: i abstractMob finns nu handleDirection(direction) flyttar moben ett steg åt vald direction om det är möjligt och returnerar true eller false. Så som vi la upp det fick vi välja om idea skulle klaga på tom
+if-body eller onödig return, vi valde return. 
+
+11:"Jag tycker det är bättre med en setHealthLabel(String) i TowerDefenceViewer än att hämta den och sätta den i ett annat objekt. Liknande med andra labels. Det ger bättre inkapsling att andra inte vet hur den ser ut innuti."
+K: vi har nu gjort en setHealthLabel(String) och ändrat så updatefunction för det i board anropar denna istället för gettern (som är borttagen), vi har gjort samma för övriga labels.
+
+12:"Här kan ni göra som i förberedelselabben och låta direction ha (1,0) för höger sedan x += direction.x*speed så slipper ni switch/throw.
+        switch (direction) {
+            case RIGHT:
+                x += speed;
+                break;
+            case LEFT:
+                x -= speed;
+                break;
+            case DOWN:
+                y += speed;
+                break;
+            case UP:
+                y -= speed;
+                break;
+            default:
+                throw new IllegalArgumentException("Not a valid direction: " + direction);"
+K: Directions är nu omskrivna så att de har (1,0), (-1,0) osv och vi använder x += direction.x*speed och gör samma med y i moveMobDir (i AbstractMob)
+
+13:"Här förstår jag inte vad (x + speed != oldX || y != oldY) innebär. Om du går åt höger och man kan gå på rutan, borde inte x + speed != oldX automatiskt?"
+K: detta är nu bortaget, se punkt 2
+
+14:"Förståelig kod (Repetitiv kod):
+I WaveManager använder ni listor för att spara hur många monster som ska komma
+i varje våg. Här skulle ni istället kunna spara antalet fiender som ska komma i 
+varje våg. På det sättet blir koden både mer minneseffektiv och det blir lättare
+att se eller ändra hur många fiender som ska komma i varje våg."
+K: detta är nu fixat, se punkt 1
+
+15:"Ett annat exempel på repetitiv kod är klasserna Board och Map. Board är i
+princip allt Map är och mer. Är klassen Map verkligen nödvändig? Egentligen 
+skulle ni kunna skicka in er array av BlockType direkt till Board istället."
+K: TowerDefenceMapMaker skapar nu inte en map längre utan istället en array som sänds in i board som behandlar den direkt. Klassen map finns nu inte längre.
+
+16:"Slutligen har ni i AbstractMob två switch-satser med en del kod som kan
+parametiseras. Ni skulle till exempel kunna ge er Direction-enum fält för
+skillnad i x-led och y-led och använda dessa."
+K: Fixat båda delarna i tidigare punkter (12,2)
+
+17:"Förståelig kod (Dokumentation och kommentarer):
+Er projektbeskrivningen ger en bra översikt över programmet. Koden är på det 
+stora hela lättförståelig de kommentarer som finns är tydliga. På vissa ställen 
+hade ni kunnat skriva lite fler kommentarer. Ett exempel är metoden mouseClicked
+i OurMouseListener. Denna är ganska lång och inte helt enkel att förstå."
+K: mouseClicked har nu en beskrivning på vad den gör.
+
+
+
+
+
+
+
+
+
